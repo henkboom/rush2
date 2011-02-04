@@ -1,5 +1,9 @@
 PROJECT_NAME := rush2
 PACKAGES += rhizome
 SRC += \
-	dummy_scene.c \
-	main.c
+	camera.c \
+	main.c \
+	main_scene.c \
+	player.c \
+	ship.c \
+	terrain_renderer.c

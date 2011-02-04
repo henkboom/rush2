@@ -3,7 +3,7 @@ CC := clang
 
 SRC :=
 PACKAGES :=
-CFLAGS := -Wall -g -O0 -std=c99
+CFLAGS := -Wall -g -O0 -std=gnu99
 LDFLAGS := -lglfw -lGL -lGLU -lm
 
 include project.mk
