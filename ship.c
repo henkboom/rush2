@@ -41,7 +41,7 @@ static void handle_ship_init(
     ship->player_input = args->player_input;
 }
 
-static void handle_tick(game_context_s *context, void *data, const void **dummy)
+static void handle_tick(game_context_s *context, void *data, const nothing_s *n)
 {
     ship_s *ship = data;
 
