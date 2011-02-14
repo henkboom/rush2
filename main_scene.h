@@ -3,6 +3,8 @@
 
 #include "rhizome/game.h"
 
-declare_component(main_scene, component_h);
+component_h add_main_scene_component(
+    game_context_s *context,
+    component_h parent);
 
 #endif

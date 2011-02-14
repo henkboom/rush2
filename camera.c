@@ -6,11 +6,6 @@
 
 #include "rhizome/renderer.h"
 
-begin_component(camera);
-    component_subscribe(tick);
-    component_subscribe(camera_follow_transform);
-end_component();
-
 typedef struct {
     render_job_s render_job;
     transform_h transform;
@@ -20,8 +15,13 @@ typedef struct {
 
 static void render(const render_context_s *context, const render_job_s *data);
 
-static component_h init(game_context_s *context)
+component_h add_camera_component(game_context_s *context, component_h parent)
 {
+    context = game_add_component(context, parent, release_component);
+
+    component_subscribe(context, tick);
+    component_subscribe(context, camera_follow_transform);
+
     component_h self = game_get_self(context);
     camera_s *camera = malloc(sizeof(camera_s));
     game_set_component_data(context, camera);
@@ -38,7 +38,7 @@ static component_h init(game_context_s *context)
     return self;
 }
 
-static void release(void *data)
+static void release_component(void *data)
 {
     free(data);
 }
@@ -73,9 +73,22 @@ static void render(const render_context_s *context, const render_job_s *data)
 {
     const camera_s *camera = (camera_s *)data;
 
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, context->width, context->height);
+
     glMatrixMode(GL_PROJECTION);
-    gluPerspective(65, (double)context->width/context->height, 0.1, 100);
+    glLoadIdentity();
+    gluPerspective(65, (double)context->width/context->height, 1, 100);
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    glEnable(GL_DEPTH_TEST);
+
+    glColor3d(1, 1, 1);
 
     vect_s up = make_vect(1, 0, 0);
     if(vect_sqrmag(camera->vel) > 0)

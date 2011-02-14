@@ -6,19 +6,19 @@
 #include "camera.h"
 #include "ship.h"
 
-begin_component(player);
-end_component();
-
 typedef struct {
 } player_s;
 
-static component_h init(game_context_s *context)
+component_h add_player_component(game_context_s *context, component_h parent)
 {
+    context = game_add_component(context, parent, release_component);
+
     component_h self = game_get_self(context);
     player_s *player = malloc(sizeof(player_s));
     game_set_component_data(context, player);
 
-    transform_h transform = add_transform_component(context, self);
+    transform_h transform = add_transform_component(context, self,
+        vect_zero, quaternion_identity);
 
     component_h sprite = add_sprite_component(context, self);
     send_sprite_track_transform(context, sprite, transform);
@@ -34,7 +34,7 @@ static component_h init(game_context_s *context)
     return self;
 }
 
-static void release(void *data)
+static void release_component(void *data)
 {
     free(data);
 }

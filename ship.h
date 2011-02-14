@@ -13,7 +13,7 @@ typedef struct {
 } ship_s;
 define_handle_type(ship_h, const ship_s);
 
-declare_component(ship, ship_h);
+ship_h add_ship_component(game_context_s *context, component_h parent);
 
 typedef struct {
     transform_h transform;

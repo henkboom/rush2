@@ -3,6 +3,8 @@
 
 #include "rhizome/game.h"
 
-declare_component(terrain_renderer, component_h);
+component_h add_terrain_renderer_component(
+    game_context_s *context,
+    component_h parent);
 
 #endif

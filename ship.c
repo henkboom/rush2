@@ -5,13 +5,13 @@
 #include "rhizome/quaternion.h"
 #include "rhizome/vect.h"
 
-begin_component(ship);
-    component_subscribe(ship_init);
-    component_subscribe(tick);
-end_component();
-
-static ship_h init(game_context_s *context)
+ship_h add_ship_component(game_context_s *context, component_h parent)
 {
+    context = game_add_component(context, parent, release_component);
+
+    component_subscribe(context, ship_init);
+    component_subscribe(context, tick);
+
     component_h self = game_get_self(context);
     ship_s *ship = malloc(sizeof(ship_s));
     game_set_component_data(context, ship);
@@ -26,7 +26,7 @@ static ship_h init(game_context_s *context)
     return handle;
 }
 
-static void release(void *data)
+static void release_component(void *data)
 {
     free(data);
 }
@@ -54,7 +54,7 @@ static void handle_tick(game_context_s *context, void *data, const nothing_s *n)
     const transform_s *transform = handle_get(ship->transform);
 
     ship->velocity = vect_add(ship->velocity,
-        vect_mul(quaternion_rotate_i(transform->orientation), control.y/60));
+        vect_mul(quaternion_rotate_i(transform->orientation), control.y/50));
     // damp
     ship->velocity = vect_mul(ship->velocity, 0.98);
 

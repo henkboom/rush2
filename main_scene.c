@@ -8,13 +8,13 @@
 #include "player.h"
 #include "terrain_renderer.h"
 
-begin_component(main_scene);
-    component_subscribe(input_handler_close_event)
-    component_subscribe(input_handler_key_event)
-end_component();
-
-static component_h init(game_context_s *context)
+component_h add_main_scene_component(game_context_s *context, component_h parent)
 {
+    context = game_add_component(context, parent, release_component);
+
+    component_subscribe(context, input_handler_close_event)
+    component_subscribe(context, input_handler_key_event)
+
     component_h self = game_get_self(context);
 
     add_input_handler_component(context, self);
@@ -43,6 +43,6 @@ static void handle_input_handler_key_event(
         game_remove_component(context, game_get_self(context));
 }
 
-static void release(void *data)
+static void release_component(void *data)
 {
 }

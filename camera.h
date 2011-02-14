@@ -4,7 +4,7 @@
 #include "rhizome/game.h"
 #include "rhizome/transform.h"
 
-declare_component(camera, component_h);
+component_h add_camera_component(game_context_s *context, component_h parent);
 
 define_broadcast(camera_follow_transform, transform_h);
 
