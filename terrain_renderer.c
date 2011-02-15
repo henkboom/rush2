@@ -6,6 +6,7 @@
 #include "rhizome/array.h"
 #include "rhizome/renderer.h"
 #include "graphics.h"
+#include "noise.h"
 
 #define BLOCK_SIZE 128
 #define TRIANGLE_SIZE 1.0
@@ -64,10 +65,12 @@ static void release_component(void *data)
 #define SQRT3 1.7320508075689
 static inline vect_s pos_at(int i, int j)
 {
-    return make_vect(
+    vect_s ret = make_vect(
         (i + j * 0.5) * TRIANGLE_SIZE,
-        sin(i/6.0)/2 + sin(j/7.0)/2 - 1,
+        0,
         j * SQRT3/2 * TRIANGLE_SIZE);
+    ret.y = noise_generator_sample_at(ret);
+    return ret;
 }
 
 static void create_buffers(
@@ -98,8 +101,8 @@ static void create_buffers(
             array_add(elements, i+1+j*BLOCK_SIZE);
             array_add(elements, i+j*BLOCK_SIZE);
         }
-        // degenerate triangles
-        array_add(elements, (i  ));
+        // degenerate triangles to switch to the next strip
+        array_add(elements, i);
         array_add(elements, i+2+(BLOCK_SIZE-1)*BLOCK_SIZE);
     }
 

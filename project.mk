@@ -5,6 +5,7 @@ SRC += \
 	graphics.c \
 	main.c \
 	main_scene.c \
+	noise.c \
 	player.c \
 	ship.c \
 	terrain_renderer.c
