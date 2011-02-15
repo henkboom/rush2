@@ -98,6 +98,9 @@ static void create_buffers(
             array_add(elements, i+1+j*BLOCK_SIZE);
             array_add(elements, i+j*BLOCK_SIZE);
         }
+        // degenerate triangles
+        array_add(elements, (i  ));
+        array_add(elements, i+2+(BLOCK_SIZE-1)*BLOCK_SIZE);
     }
 
     *vertex_buffer = graphics_make_buffer(
@@ -159,9 +162,8 @@ static void render(const render_context_s *context, const render_job_s *data)
         glGetAttribLocation(job->program, "vertex_type"));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, job->element_buffer);
-    for(int i = 0; i < BLOCK_SIZE-1; i++)
-        glDrawElements(GL_TRIANGLE_STRIP, BLOCK_SIZE*2,
-                GL_UNSIGNED_INT, (void *)(BLOCK_SIZE*2*i*sizeof(unsigned)));
+    glDrawElements(GL_TRIANGLE_STRIP, BLOCK_SIZE*2*(BLOCK_SIZE-1),
+            GL_UNSIGNED_INT, (void *)0);
 
     glUseProgram(0);
 }
