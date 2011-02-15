@@ -29,18 +29,20 @@ GLuint graphics_create_shader_from_file(
     glShaderSource(shader, 1, (const char **)&data, &size);
     glCompileShader(shader);
 
-    GLint status;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-    if(status == GL_FALSE)
+    GLint log_length;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
+    if(log_length > 1)
     {
-        GLint log_length;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
-        
         GLchar *log = malloc((log_length+1) * sizeof(GLchar));
         glGetShaderInfoLog(shader, log_length, NULL, log);
         log[log_length] = 0;
         
-        error(-1, 0, "%s: %s", filename, log);
+        GLint status;
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+        if(status == GL_FALSE)
+            error(-1, 0, "%s: %s", filename, log);
+        else
+            printf("%s: %s\n", filename, log);
         free(log);
     }
 
@@ -56,18 +58,20 @@ GLuint graphics_create_program(int count, GLuint *shaders)
     
     glLinkProgram(program);
     
-    GLint status;
-    glGetProgramiv(program, GL_LINK_STATUS, &status);
-    if (status == GL_FALSE)
+    GLint log_length;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
+    if(log_length > 1)
     {
-        GLint log_length;
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
-        
         GLchar *log = malloc((log_length+1) * sizeof(GLchar));
         glGetProgramInfoLog(program, log_length, NULL, log);
         log[log_length] = 0;
         
-        error(-1, 0, "Link error: %s", log);
+        GLint status;
+        glGetProgramiv(program, GL_COMPILE_STATUS, &status);
+        if(status == GL_FALSE)
+            error(-1, 0, "Link error: %s", log);
+        else
+            printf("Link message: %s\n", log);
         free(log);
     }
     
