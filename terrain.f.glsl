@@ -14,7 +14,6 @@ void main()
     } else {
         gl_FragColor.r = 0.0;
     }
-    gl_FragColor.g = gl_FragColor.r;
-    gl_FragColor.b = gl_FragColor.r;
+    gl_FragColor.gb = gl_FragColor.rr;
     gl_FragColor.a = 1.0;
 }
