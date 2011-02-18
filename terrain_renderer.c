@@ -12,20 +12,19 @@
 #define TRIANGLE_SIZE 1.0
 
 typedef struct {
-    render_job_s render_job;
     GLuint program;
     GLuint vertex_buffer;
     GLuint vertex_type_buffer;
     GLuint element_buffer;
-} terrain_renderer_job_s;
-define_handle_type(terrain_renderer_job_h, terrain_renderer_job_s);
+} render_data_s;
 
 typedef struct {
+    render_job_s render_job;
     // exclusively accessed by 'renderer' during 'tick'
-    terrain_renderer_job_h render_job;
+    render_data_s render_data;
 } terrain_renderer_s;
 
-static void render(const render_context_s *context, const render_job_s *data);
+static void render(const render_context_s *context, void *data);
 
 component_h add_terrain_renderer_component(
     game_context_s *context,
@@ -37,29 +36,26 @@ component_h add_terrain_renderer_component(
     terrain_renderer_s *terrain_renderer = malloc(sizeof(terrain_renderer_s));
     game_set_component_data(context, terrain_renderer);
 
-    terrain_renderer_job_s *job = malloc(sizeof(terrain_renderer_job_s));
-    handle_new(&terrain_renderer->render_job, job);
+    terrain_renderer->render_job.priority = 1;
+    terrain_renderer->render_job.render = render;
+    terrain_renderer->render_job.data = &terrain_renderer->render_data;
 
-    job->render_job.render = render;
-    job->program = 0;
-    job->vertex_buffer = 0;
+    terrain_renderer->render_data.program = 0;
+    terrain_renderer->render_data.vertex_buffer = 0;
+    terrain_renderer->render_data.vertex_type_buffer = 0;
+    terrain_renderer->render_data.element_buffer = 0;
 
-    broadcast_renderer_add_job(
-        context,
-        *(render_job_h*)&terrain_renderer->render_job);
+    render_job_h job;
+    game_add_buffer(context, &terrain_renderer->render_job,
+        sizeof(render_job_s), (void_h*)&job);
+    broadcast_renderer_add_job(context, job);
 
     return self;
 }
 
 static void release_component(void *data)
 {
-    terrain_renderer_s *terrain_renderer = data;
-    terrain_renderer_job_s *job = handle_get(terrain_renderer->render_job);
-
-    free(job);
-    handle_release(terrain_renderer->render_job);
-
-    free(terrain_renderer);
+    free(data);
 }
 
 #define SQRT3 1.7320508075689
@@ -129,42 +125,44 @@ static void create_buffers(
     array_release(elements);
 }
 
-static void render(const render_context_s *context, const render_job_s *data)
+static void render(const render_context_s *context, void *data)
 {
-    terrain_renderer_job_s *job = (terrain_renderer_job_s *)data;
+    render_data_s *render_data = data;
 
-    if(job->program == 0)
+    if(render_data->program == 0)
     {
         GLuint shaders[2];
         shaders[0] = graphics_create_shader_from_file(
             GL_VERTEX_SHADER, "terrain.v.glsl");
         shaders[1] = graphics_create_shader_from_file(
             GL_FRAGMENT_SHADER, "terrain.f.glsl");
-        job->program = graphics_create_program(2, shaders);
+        render_data->program = graphics_create_program(2, shaders);
     }
 
-    if(job->vertex_buffer == 0)
+    if(render_data->vertex_buffer == 0)
     {
         create_buffers(
-            &job->vertex_buffer,
-            &job->vertex_type_buffer,
-            &job->element_buffer);
+            &render_data->vertex_buffer,
+            &render_data->vertex_type_buffer,
+            &render_data->element_buffer);
     }
 
-    glUseProgram(job->program);
+    glUseProgram(render_data->program);
 
-    glBindBuffer(GL_ARRAY_BUFFER, job->vertex_buffer);
-    glVertexAttribPointer(glGetAttribLocation(job->program, "vertex"),
+    glBindBuffer(GL_ARRAY_BUFFER, render_data->vertex_buffer);
+    glVertexAttribPointer(glGetAttribLocation(render_data->program, "vertex"),
         3, GL_DOUBLE, GL_FALSE, sizeof(double) * 3, (void *)0);
-    glEnableVertexAttribArray(glGetAttribLocation(job->program, "vertex"));
+    glEnableVertexAttribArray(
+        glGetAttribLocation(render_data->program, "vertex"));
 
-    glBindBuffer(GL_ARRAY_BUFFER, job->vertex_type_buffer);
-    glVertexAttribPointer(glGetAttribLocation(job->program, "vertex_type"),
+    glBindBuffer(GL_ARRAY_BUFFER, render_data->vertex_type_buffer);
+    glVertexAttribPointer(
+        glGetAttribLocation(render_data->program, "vertex_type"),
         1, GL_FLOAT, GL_FALSE, sizeof(float), (void *)0);
     glEnableVertexAttribArray(
-        glGetAttribLocation(job->program, "vertex_type"));
+        glGetAttribLocation(render_data->program, "vertex_type"));
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, job->element_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, render_data->element_buffer);
     glDrawElements(GL_TRIANGLE_STRIP, BLOCK_SIZE*2*(BLOCK_SIZE-1),
             GL_UNSIGNED_INT, (void *)0);
 

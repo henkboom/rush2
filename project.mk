@@ -1,7 +1,7 @@
 PROJECT_NAME := rush2
 PACKAGES += rhizome
 SRC += \
-	camera.c \
+	player_camera.c \
 	graphics.c \
 	main.c \
 	main_scene.c \
