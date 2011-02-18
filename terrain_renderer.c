@@ -166,5 +166,12 @@ static void render(const render_context_s *context, void *data)
     glDrawElements(GL_TRIANGLE_STRIP, BLOCK_SIZE*2*(BLOCK_SIZE-1),
             GL_UNSIGNED_INT, (void *)0);
 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(
+        glGetAttribLocation(render_data->program, "vertex"));
+    glDisableVertexAttribArray(
+        glGetAttribLocation(render_data->program, "vertex_type"));
+
     glUseProgram(0);
 }
