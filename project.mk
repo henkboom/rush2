@@ -8,4 +8,5 @@ SRC += \
 	noise.c \
 	player.c \
 	ship.c \
+	terrain_manager.c \
 	terrain_renderer.c

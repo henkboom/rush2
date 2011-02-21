@@ -8,10 +8,13 @@
 #include "graphics.h"
 #include "noise.h"
 
-#define BLOCK_SIZE 128
-#define TRIANGLE_SIZE 1.0
+// number of vertices along the edge of the block
+#define TERRAIN_BLOCK_VERTICES 31
+#define TERRAIN_TRIANGLE_SIZE \
+    ((double)TERRAIN_BLOCK_WIDTH/(TERRAIN_BLOCK_VERTICES-1))
 
 typedef struct {
+    vect_s offset;
     GLuint program;
     GLuint vertex_buffer;
     GLuint vertex_type_buffer;
@@ -28,7 +31,8 @@ static void render(const render_context_s *context, void *data);
 
 component_h add_terrain_renderer_component(
     game_context_s *context,
-    component_h parent)
+    component_h parent,
+    vect_s offset)
 {
     context = game_add_component(context, parent, release_component);
 
@@ -40,6 +44,7 @@ component_h add_terrain_renderer_component(
     terrain_renderer->render_job.render = render;
     terrain_renderer->render_job.data = &terrain_renderer->render_data;
 
+    terrain_renderer->render_data.offset = offset;
     terrain_renderer->render_data.program = 0;
     terrain_renderer->render_data.vertex_buffer = 0;
     terrain_renderer->render_data.vertex_type_buffer = 0;
@@ -55,21 +60,26 @@ component_h add_terrain_renderer_component(
 
 static void release_component(void *data)
 {
-    free(data);
+    terrain_renderer_s *terrain_renderer = data;
+    glDeleteBuffers(1, &terrain_renderer->render_data.vertex_buffer);
+    glDeleteBuffers(1, &terrain_renderer->render_data.vertex_type_buffer);
+    glDeleteBuffers(1, &terrain_renderer->render_data.element_buffer);
+    free(terrain_renderer);
 }
 
 #define SQRT3 1.7320508075689
-static inline vect_s pos_at(int i, int j)
+static inline vect_s pos_at(vect_s offset, int i, int j)
 {
     vect_s ret = make_vect(
-        (i + j * 0.5) * TRIANGLE_SIZE,
+        offset.x + (i + j * 0.5) * TERRAIN_TRIANGLE_SIZE,
         0,
-        j * SQRT3/2 * TRIANGLE_SIZE);
+        offset.z + j * SQRT3/2 * TERRAIN_TRIANGLE_SIZE);
     ret.y = noise_generator_sample_at(ret);
     return ret;
 }
 
 static void create_buffers(
+    vect_s offset,
     GLuint *vertex_buffer,
     GLuint *vertex_type_buffer,
     GLuint *element_buffer)
@@ -78,11 +88,11 @@ static void create_buffers(
     array_of(float) vertex_types = array_new();
     array_of(unsigned) elements = array_new();
 
-    for(int j = 0; j < BLOCK_SIZE; j++)
+    for(int j = 0; j < TERRAIN_BLOCK_VERTICES; j++)
     {
-        for(int i = 0; i < BLOCK_SIZE; i++)
+        for(int i = 0; i < TERRAIN_BLOCK_VERTICES; i++)
         {
-            vect_s pos = pos_at(i, j);
+            vect_s pos = pos_at(offset, i, j);
             array_add(vertices, pos.x);
             array_add(vertices, pos.y);
             array_add(vertices, pos.z);
@@ -90,16 +100,16 @@ static void create_buffers(
         }
     }
 
-    for(int i = 0; i < BLOCK_SIZE-1; i++)
+    for(int i = 0; i < TERRAIN_BLOCK_VERTICES-1; i++)
     {
-        for(int j = BLOCK_SIZE-1; j >= 0; j--)
+        for(int j = TERRAIN_BLOCK_VERTICES-1; j >= 0; j--)
         {
-            array_add(elements, i+1+j*BLOCK_SIZE);
-            array_add(elements, i+j*BLOCK_SIZE);
+            array_add(elements, i+1+j*TERRAIN_BLOCK_VERTICES);
+            array_add(elements, i+j*TERRAIN_BLOCK_VERTICES);
         }
         // degenerate triangles to switch to the next strip
         array_add(elements, i);
-        array_add(elements, i+2+(BLOCK_SIZE-1)*BLOCK_SIZE);
+        array_add(elements, i+2+(TERRAIN_BLOCK_VERTICES-1)*TERRAIN_BLOCK_VERTICES);
     }
 
     *vertex_buffer = graphics_make_buffer(
@@ -125,10 +135,15 @@ static void create_buffers(
     array_release(elements);
 }
 
+// TODO this should be done in some sort of resource manager
+static GLuint program = 0;
+
 static void render(const render_context_s *context, void *data)
 {
     render_data_s *render_data = data;
 
+    if(program != 0)
+        render_data->program = program;
     if(render_data->program == 0)
     {
         GLuint shaders[2];
@@ -138,10 +153,13 @@ static void render(const render_context_s *context, void *data)
             GL_FRAGMENT_SHADER, "terrain.f.glsl");
         render_data->program = graphics_create_program(2, shaders);
     }
+    if(program == 0)
+        program = render_data->program;
 
     if(render_data->vertex_buffer == 0)
     {
         create_buffers(
+            render_data->offset,
             &render_data->vertex_buffer,
             &render_data->vertex_type_buffer,
             &render_data->element_buffer);
@@ -163,7 +181,8 @@ static void render(const render_context_s *context, void *data)
         glGetAttribLocation(render_data->program, "vertex_type"));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, render_data->element_buffer);
-    glDrawElements(GL_TRIANGLE_STRIP, BLOCK_SIZE*2*(BLOCK_SIZE-1),
+    glDrawElements(GL_TRIANGLE_STRIP,
+            (TERRAIN_BLOCK_VERTICES*2+2)*(TERRAIN_BLOCK_VERTICES-1),
             GL_UNSIGNED_INT, (void *)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
