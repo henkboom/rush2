@@ -5,10 +5,13 @@
 #include "rhizome/vect.h"
 
 // Each block is a rhombus formed by two equilateral triangles
-//    _____
-//   /\   /
-//  /  \ /
-// /____/
+//
+//  +---- +x
+//  | ______
+//  | \    /\
+//  |  \  /  \
+// -z   \/____\
+//
 //
 // The triangle side lengths are all TERRAIN_BLOCK_WIDTH
 
