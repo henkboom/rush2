@@ -70,7 +70,7 @@ static void handle_tick(game_context_s *context, void *data, const nothing_s *n)
 
     ship->velocity = vect_add(
         ship->velocity,
-        vect_mul(quaternion_rotate_i(transform->orientation), control.y/25));
+        vect_mul(quaternion_rotate_i(transform->orientation), control.y/35));
     ship->velocity = vect_add(ship->velocity, make_vect(0, -1.0/60, 0));
     // damp
     ship->velocity = vect_mul(ship->velocity, 0.98);
