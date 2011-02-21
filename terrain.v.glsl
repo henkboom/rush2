@@ -9,7 +9,8 @@ out vec3 pos;
 
 void main()
 {
-    depth = -(gl_ModelViewMatrix * vec4(vertex, 1.0)).z;
+    //TODO: this should actually be distance from the player
+    depth = length(gl_ModelViewMatrix * vec4(vertex, 1.0));
     gl_Position = gl_ModelViewProjectionMatrix * vec4(vertex, 1.0);
     edge = vertex_type;
     pos = vertex.xyz;
