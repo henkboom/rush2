@@ -4,8 +4,8 @@
 #include <GL/glew.h>
 
 #include "rhizome/array.h"
+#include "rhizome/graphics.h"
 #include "rhizome/renderer.h"
-#include "graphics.h"
 #include "noise.h"
 
 // number of vertices along the edge of the block

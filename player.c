@@ -17,7 +17,7 @@ player_h add_player_component(game_context_s *context, component_h parent)
     player->transform = add_transform_component(context, self,
         vect_zero, quaternion_identity);
 
-    add_sprite_component(context, self, player->transform);
+    add_sprite_component(context, self, player->transform, NULL);
 
     player_input_h player_input = add_player_input_component(context, self);
 
