@@ -2,7 +2,6 @@
 
 in float depth;
 in float edge;
-in vec3 pos;
 
 void main()
 {
