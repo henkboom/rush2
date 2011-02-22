@@ -1,14 +1,14 @@
 #version 150 compatibility
 
-in float depth;
-in float edge;
+in float frag_depth;
+in float frag_on_edge;
 
 void main()
 {
-    float color = 1.2 - smoothstep(1.0, 75, depth);
-    float width = 0.015 + 2.0 * smoothstep(1.0, 100.0, depth);
+    float color = 1.2 - smoothstep(1.0, 75, frag_depth);
+    float width = 0.015 + 2.0 * smoothstep(1.0, 100.0, frag_depth);
 
-    if(edge > 1.0 - width) {
+    if(frag_on_edge > 1.0 - width) {
         gl_FragColor.r = color;
     } else {
         gl_FragColor.r = 0.0;
