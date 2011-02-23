@@ -70,7 +70,6 @@ static inline vect_s pos_at(vect_s offset, int i, int j)
     return ret;
 }
 
-
 static mesh_s * create_mesh(vect_s offset)
 {
     // shader

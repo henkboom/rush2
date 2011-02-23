@@ -98,5 +98,3 @@ void refresh_array(game_context_s *context, terrain_manager_s *terrain_manager)
         }
     }
 }
-
-
