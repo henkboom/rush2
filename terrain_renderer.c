@@ -106,12 +106,12 @@ static mesh_s * create_mesh(vect_s offset)
     {
         for(int j = TERRAIN_BLOCK_VERTICES-1; j > 0; j--)
         {
-            array_add(elements, (i+1)+(j  )*TERRAIN_BLOCK_VERTICES);
             array_add(elements, (i  )+(j  )*TERRAIN_BLOCK_VERTICES);
+            array_add(elements, (i+1)+(j  )*TERRAIN_BLOCK_VERTICES);
             array_add(elements, (i+1)+(j-1)*TERRAIN_BLOCK_VERTICES);
 
-            array_add(elements, (i+1)+(j-1)*TERRAIN_BLOCK_VERTICES);
             array_add(elements, (i  )+(j  )*TERRAIN_BLOCK_VERTICES);
+            array_add(elements, (i+1)+(j-1)*TERRAIN_BLOCK_VERTICES);
             array_add(elements, (i  )+(j-1)*TERRAIN_BLOCK_VERTICES);
         }
     }
