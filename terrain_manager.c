@@ -5,7 +5,7 @@
 #include "rhizome/array.h"
 #include "terrain_renderer.h"
 
-#define GRID_SIZE 7
+#define GRID_SIZE 11
 #define SQRT3 1.7320508075689
 
 typedef struct {

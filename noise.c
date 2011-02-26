@@ -5,8 +5,8 @@
 double noise_generator_sample_at(vect_s pos)
 {
     pos.y = 0;
-    return sin(pos.x/6.0) + sin(pos.z/7.0)/2 + sin(pos.x/30 + pos.z/37)*5
-         + sin(pos.x/61 - pos.z/87)*10;
+    return sin(pos.x/6.0) + sin(pos.z/7.0)/2 + sin(pos.x/30 + pos.z/37)*3
+         + sin(pos.x/61 - pos.z/87)*5;
 }
 
 vect_s noise_generator_normal_at(vect_s pos)
