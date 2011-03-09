@@ -1,4 +1,10 @@
+// TODO remove
+#define _POSIX_C_SOURCE 2
+#include <signal.h>
+#include <stdio.h>
+
 #include "ship.h"
+
 
 #include <math.h>
 
@@ -81,4 +87,20 @@ static void handle_tick(game_context_s *context, void *data, const nothing_s *n)
     if(height < 0)
         movement = vect_add(movement, make_vect(0, -height, 0));
     send_transform_move(context, transform->component, movement);
+
+    // TODO move this elsewhere
+    static FILE *out = NULL;
+    signal(SIGPIPE, SIG_IGN);
+    if(out == NULL)
+        out = popen("pdsend 3000", "w");
+    if(out != NULL)
+    {
+        if(fprintf(out, "%lf;\n", vect_magnitude(ship->velocity)) >= 0)
+            fflush(out);
+        else
+        {
+            pclose(out);
+            out = NULL;
+        }
+    }
 }
