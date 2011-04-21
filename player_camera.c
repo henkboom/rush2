@@ -1,8 +1,7 @@
 #include "player_camera.h"
 
 #include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include <GL/glfw.h>
 
 typedef struct {
     transform_h target;
@@ -45,6 +44,7 @@ static void handle_tick(game_context_s *context, void *data, const nothing_s *n)
     const transform_s *target = handle_get(player_camera->target);
     if(target)
     {
+        vect_s forward = quaternion_rotate_i(target->orientation);
         vect_s new_aim = target->pos;
         player_camera->vel = vect_add(
             vect_mul(player_camera->vel, 0.93),
@@ -53,13 +53,12 @@ static void handle_tick(game_context_s *context, void *data, const nothing_s *n)
 
         vect_s up = make_vect(1, 0, 0);
         if(vect_sqrmag(player_camera->vel) > 0)
-            up = player_camera->vel;
-        up = make_vect(0, 1, 0);
+            up = vect_add(player_camera->vel, forward);
 
         vect_s source_pos =
-            vect_sub(new_aim, vect_mul(player_camera->vel, 3));
+            vect_sub(new_aim, vect_mul(vect_add(player_camera->vel, forward), 3));
         vect_s target_pos =
-            vect_add(new_aim, vect_mul(player_camera->vel, 6));
+            vect_add(new_aim, vect_mul(vect_add(player_camera->vel, forward), 6));
         //vect_s source_pos = make_vect(-1, 5, -1);
         //vect_s target_pos = make_vect(10, 0, 10);
         source_pos.y += fmax(10 - vect_magnitude(player_camera->vel) * 10, 1);

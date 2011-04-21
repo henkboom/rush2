@@ -40,7 +40,9 @@ component_h add_terrain_manager_component(
     array_set_length(terrain_manager->renderers, GRID_SIZE*GRID_SIZE);
     for(int i = 0; i < GRID_SIZE*GRID_SIZE; i++)
     {
-        handle_reset(&(array_get_ptr(terrain_manager->renderers)+i)->renderer);
+        renderer_record_s *record =
+            array_get_ptr(terrain_manager->renderers) + i;
+        handle_reset(&(record->renderer));
     }
     refresh_array(context, terrain_manager);
 
@@ -49,7 +51,9 @@ component_h add_terrain_manager_component(
 
 void release_component(void *data)
 {
-    free(data);
+    terrain_manager_s *terrain_manager = data;
+    array_release(terrain_manager->renderers);
+    free(terrain_manager);
 }
 
 void handle_tick(game_context_s *context, void *data, const nothing_s *n)
@@ -81,8 +85,8 @@ void refresh_array(game_context_s *context, terrain_manager_s *terrain_manager)
             renderer_record_s *record =
                 array_get_ptr(terrain_manager->renderers) + (ii+jj*GRID_SIZE);
 
-            if(record->i != i || record->j != j
-               || !handle_live(record->renderer))
+            if(!handle_live(record->renderer)
+                || record->i != i || record->j != j)
             {
                 if(handle_live(record->renderer))
                     game_remove_component(context, record->renderer);

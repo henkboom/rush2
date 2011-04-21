@@ -11,6 +11,11 @@
 #include "rhizome/quaternion.h"
 #include "rhizome/vect.h"
 #include "noise.h"
+//TODO remove
+#include "kinect.h"
+
+//TODO remove!!
+/*global*/ double player_speed;
 
 ship_h add_ship_component(game_context_s *context, component_h parent)
 {
@@ -48,54 +53,101 @@ static void handle_ship_init(
     ship->player_input = args->player_input;
 }
 
+static double height_at(vect_s pos)
+{
+    return pos.y - noise_generator_sample_at(pos) - 0.2;
+}
+
+static int past_collision_height(vect_s pos)
+{
+    return height_at(pos) < -2;
+}
+
 static void handle_tick(game_context_s *context, void *data, const nothing_s *n)
 {
     ship_s *ship = data;
-
-    vect_s control = handle_get(ship->player_input)->direction;
-
-    quaternion_s rotation = make_quaternion_rotation(
-        make_vect(0, 1, 0),
-        3.14159/128 * -control.x);
-
     const transform_s *transform = handle_get(ship->transform);
+    vect_s forward = quaternion_rotate_i(transform->orientation);
 
-    // in ground?
-    double height =
-        transform->pos.y - noise_generator_sample_at(transform->pos) - 0.2;
+    //// Controls
+    vect_s control = handle_get(ship->player_input)->direction;
+    double slope = kinect_get_slope();
+    //printf("%lf\n", slope);
+    if(slope > -1 && slope < 1)
+    {
+        control.x -= slope;
+        control.y += fmax(1-2*fabs(slope), 0);
+    }
+
+    //// Acceleration
+    ship->velocity = vect_add(ship->velocity, vect_mul(forward, control.y/100));
+    ship->velocity = vect_add(ship->velocity, make_vect(0, -1.0/30, 0));
+
+    //// Velocity
+    vect_s sideways_vel = vect_project(
+        ship->velocity,
+        quaternion_rotate_k(transform->orientation));
+    ship->velocity = vect_sub(
+        ship->velocity,
+        vect_mul(sideways_vel, 0.3));
+    ship->velocity = vect_mul(ship->velocity, 0.995);
+    vect_s movement = ship->velocity;
+
+    //// Wall Collision Detection
+    if(past_collision_height(vect_add(movement, transform->pos)))
+    {
+        vect_s contact_normal = vect_zero;
+        if(past_collision_height(
+            vect_add(transform->pos, make_vect(movement.x, movement.y, 0))))
+        {
+            contact_normal = movement.x > 0 ? vect_neg(vect_i) : vect_i;
+        }
+        else
+        {
+            contact_normal = movement.z > 0 ? vect_neg(vect_k) : vect_k;
+        }
+        ship->velocity = vect_sub(ship->velocity,
+            vect_mul(vect_project(ship->velocity, contact_normal), 1.5));
+        movement = vect_sub(movement,
+            vect_mul(vect_project(movement, contact_normal), 1.5));
+    }
+
+    //// Ground Collision Detection
+    double height = height_at(vect_add(movement, transform->pos));
     if(height <= 0)
     {
         vect_s normal = noise_generator_normal_at(transform->pos);
+        //print_vect(ship->velocity);
+        //print_vect(normal);
         if(vect_dot(normal, ship->velocity) < 0)
         {
             ship->velocity = vect_sub(
                 ship->velocity,
-                vect_div(vect_project(ship->velocity, normal), 4));
+                vect_div(vect_project(ship->velocity, normal), 2));
         }
     }
-
-    ship->velocity = vect_add(
-        ship->velocity,
-        vect_mul(quaternion_rotate_i(transform->orientation), control.y/35));
-    ship->velocity = vect_add(ship->velocity, make_vect(0, -1.0/60, 0));
-    // damp
-    ship->velocity = vect_mul(ship->velocity, 0.98);
-
-    send_transform_rotate(context, transform->component, rotation);
-
-    vect_s movement = ship->velocity;
     if(height < 0)
         movement = vect_add(movement, make_vect(0, -height, 0));
-    send_transform_move(context, transform->component, movement);
 
+    //// Rotation
+    quaternion_s rotation = make_quaternion_rotation(
+        make_vect(0, 1, 0),
+        3.14159/64 * -control.x);
+
+    //// Send Transform Messages
+    send_transform_move(context, transform->component, movement);
+    send_transform_rotate(context, transform->component, rotation);
+
+    //// Send Speed to PureData
     // TODO move this elsewhere
+    player_speed = vect_magnitude(ship->velocity);
     static FILE *out = NULL;
     signal(SIGPIPE, SIG_IGN);
     if(out == NULL)
         out = popen("pdsend 3000", "w");
     if(out != NULL)
     {
-        if(fprintf(out, "%lf;\n", vect_magnitude(ship->velocity)) >= 0)
+        if(fprintf(out, "%lf;\n", player_speed) >= 0)
             fflush(out);
         else
         {

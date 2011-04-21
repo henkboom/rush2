@@ -5,6 +5,7 @@
 #include "rhizome/input_handler.h"
 #include "rhizome/renderer.h"
 #include "rhizome/vect.h"
+#include "kinect_display.h"
 #include "player.h"
 #include "player_camera.h"
 #include "terrain_manager.h"
@@ -30,6 +31,8 @@ component_h add_main_scene_component(
         camera, handle_get(player)->transform);
 
     add_terrain_manager_component(context, self, handle_get(player)->transform);
+
+    add_kinect_display_component(context, self);
 
     return self;
 }

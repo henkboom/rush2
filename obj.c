@@ -70,7 +70,7 @@ obj_s *obj_load(const char *filename)
             array_add(obj->vertices, x);
             array_add(obj->vertices, y);
             array_add(obj->vertices, z);
-            printf("v %f %f %f\n", x, y, z);
+            //printf("v %f %f %f\n", x, y, z);
             skip_until_char(file, '\n');
         }
         else if(strcmp(keyword, "f") == 0)
@@ -80,25 +80,25 @@ obj_s *obj_load(const char *filename)
             {
                 matches = fscanf(file, "%u", &v[i]);
                 skip_until_ws(file);
-                printf("i=%d, %u\n", i, v[i]);
+                //printf("i=%d, %u\n", i, v[i]);
                 if(matches != 1) error(-1, 0, "error parsing face");
             }
             do
             {
-                printf("face %u %u %u\n", v[0], v[1], v[2]);
+                //printf("face %u %u %u\n", v[0], v[1], v[2]);
                 array_add(obj->elements, v[0]-1);
                 array_add(obj->elements, v[1]-1);
                 array_add(obj->elements, v[2]-1);
                 v[1] = v[2];
                 matches = fscanf(file, "%u", &v[2]);
-                printf("matches %d %u\n", matches, v[2]);
+                //printf("matches %d %u\n", matches, v[2]);
                 if(matches == 1) skip_until_ws(file);
             } while(matches == 1);
-            printf("done face\n");
+            //printf("done face\n");
         }
         else
         {
-            printf("skipping '%s'\n", keyword);
+            //printf("skipping '%s'\n", keyword);
             skip_until_char(file, '\n');
         }
     }
@@ -115,7 +115,7 @@ void obj_release(obj_s *obj)
 
 unsigned obj_get_vertex_count(obj_s *obj)
 {
-    return array_length(obj->vertices);
+    return array_length(obj->vertices) / 3;
 }
 
 float * obj_get_vertices(obj_s *obj)
@@ -125,7 +125,7 @@ float * obj_get_vertices(obj_s *obj)
 
 unsigned obj_get_triangle_count(obj_s *obj)
 {
-    return array_length(obj->elements);
+    return array_length(obj->elements) / 3;
 }
 
 unsigned * obj_get_triangles(obj_s *obj)
